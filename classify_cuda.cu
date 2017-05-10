@@ -49,15 +49,15 @@ void trainLogRegKernel(
 
       float* gradient = &shmem[sizeof(float) * 50];
 
-      float x[51];
-      for(int i = 0; i < 51; i++){
-        x[i] = data[idx + i * batch_size];
-      }
+      // float x[51];
+      // for(int i = 0; i < 51; i++){
+      //   x[i] = data[idx + i * batch_size];
+      // }
       float grad[50];
       //The error value is the dot product
       float error_val = 0;
       for(int i = 0; i < 50; i++){
-        error_val += weight_v[i] * data[i];
+        error_val += weight_v[i] * data[idx + i * batch_size];
       }
       // If there is an error, add to the error
       if(error_val <= 0){
@@ -65,7 +65,7 @@ void trainLogRegKernel(
       }
       //Find the gradient for the data point x
       for(int i = 0; i < 50; i++){
-        grad[i] = (1 / batch_size) * (x[50] * x[i]) / (1 + exp(1 + x[50] * error_val));
+        grad[i] = (1 / batch_size) * (data[idx + 51 * batch_size] * x[i]) / (1 + exp(1 + data[idx + i * batch_size] * error_val));
       }
 
       //Now atomically build gradient
@@ -97,7 +97,7 @@ float cudaClassify(
 {
     //int block_size = (batch_size < 1024) ? batch_size : 1024;
     int block_size = 512;
-    
+
     // grid_size = CEIL(batch_size / block_size)
     int grid_size = (batch_size + block_size - 1) / block_size;
 
