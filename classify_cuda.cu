@@ -105,12 +105,12 @@ float cudaClassify(
     gpuErrChk(cudaMalloc(&d_errors, sizeof(float)));
     gpuErrChk(cudaMemset(d_errors, 0, sizeof(float)));
 
-    trainLogRegKernel<<<grid_size, block_size, shmem_bytes, stream>>>(
-        data,
-        batch_size,
-        step_size,
-        weights,
-        d_errors);
+    // trainLogRegKernel<<<grid_size, block_size, shmem_bytes, stream>>>(
+    //     data,
+    //     batch_size,
+    //     step_size,
+    //     weights,
+    //     d_errors);
 
     float h_errors = -1.0;
     gpuErrChk(cudaMemcpy(&h_errors, d_errors, sizeof(float), cudaMemcpyDefault));
