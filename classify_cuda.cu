@@ -42,7 +42,7 @@ void trainLogRegKernel(
       float *grad = (float *)malloc(50 * sizeof(float));
       //The error value is the dot product
       float error_val = 0;
-      for(int i = 0; i < size; i++){
+      for(int i = 0; i < 50; i++){
         error_val += weight_v[i] * x[i];
       }
       // If there is an error, add to the error
