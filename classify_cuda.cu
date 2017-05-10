@@ -47,7 +47,7 @@ void trainLogRegKernel(
       }
       // If there is an error, add to the error
       if(error_val <= 0){
-        *errors += 1 / batch_size;
+        atomicAdd(errors, 1 / batch_size);
       }
       //Find the gradient for the data point x
       for(int i = 0; i < 50; i++){
