@@ -17,6 +17,19 @@
  *         value of loss function over the batch or the misclassification rate
  *         in the batch to errors.
  */
+ #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+ inline void gpuAssert(
+     cudaError_t code,
+     const char *file,
+     int line,
+     bool abort=true)
+ {
+     if (code != cudaSuccess) {
+         fprintf(stderr,"GPUassert: %s %s %d\n",
+             cudaGetErrorString(code), file, line);
+         exit(code);
+     }
+ }
 
 __global__
 void trainLogRegKernel(
@@ -33,6 +46,7 @@ void trainLogRegKernel(
       extern __shared__ float shmem[];
       float* weight_v = &shmem[0];
       weight_v = weights;
+
       float* gradient = &shmem[sizeof(float) * 50];
 
       float *x = (float *)malloc(51 * sizeof(float));
@@ -85,11 +99,13 @@ float cudaClassify(
 
     // grid_size = CEIL(batch_size / block_size)
     int grid_size = (batch_size + block_size - 1) / block_size;
+
+    // 50 floats for the weight, 50 floats for the gradient
     int shmem_bytes = sizeof(float) * 100;
 
     float *d_errors;
-    cudaMalloc(&d_errors, sizeof(float));
-    cudaMemset(d_errors, 0, sizeof(float));
+    gpuErrChk(cudaMalloc(&d_errors, sizeof(float)));
+    gpuErrChk(cudaMemset(d_errors, 0, sizeof(float)));
 
     trainLogRegKernel<<<grid_size, block_size, shmem_bytes, stream>>>(
         data,
@@ -99,7 +115,7 @@ float cudaClassify(
         d_errors);
 
     float h_errors = -1.0;
-    cudaMemcpy(&h_errors, d_errors, sizeof(float), cudaMemcpyDefault);
-    cudaFree(d_errors);
+    gpuErrChk(cudaMemcpy(&h_errors, d_errors, sizeof(float), cudaMemcpyDefault));
+    gpuErrChk(cudaFree(d_errors));
     return h_errors;
 }
