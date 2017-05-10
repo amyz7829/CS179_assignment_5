@@ -89,7 +89,7 @@ void classify(istream& in_stream, int batch_size) {
     gpuErrChk(cudaMalloc(&dev_weight, 50 * sizeof(float)));
 
     // Adjust offset to make it like "two" buffers
-    float *buffer = (float *) malloc(batch_size * 51 * 2 * sizeof(float));
+    float buffer[batch_size * 2];
     float *dev_buffer;
     gpuErrChk(cudaMalloc(&dev_buffer, batch_size * 51 * sizeof(float)));
 
