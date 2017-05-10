@@ -49,11 +49,6 @@ void trainLogRegKernel(
 
       float* gradient = &shmem[sizeof(float) * 50];
 
-      // float x[51];
-      // for(int i = 0; i < 51; i++){
-      //   x[i] = data[idx + i * batch_size];
-      // }
-      float grad[50];
       //The error value is the dot product
       float error_val = 0;
       for(int i = 0; i < 50; i++){
@@ -65,18 +60,13 @@ void trainLogRegKernel(
       }
       //Find the gradient for the data point x
       for(int i = 0; i < 50; i++){
-        grad[i] = (1 / batch_size) * (data[idx + 51 * batch_size] * data[idx + i * batch_size]) / (1 + exp(1 + data[idx + i * batch_size] * error_val));
-      }
-
-      //Now atomically build gradient
-      for(int i = 0; i < 50; i++){
-        atomicAdd(&gradient[i], grad[i]);
+        atomicAdd(&gradient[i], (1 / batch_size) * (data[idx + 51 * batch_size] * data[idx + i * batch_size]) / (1 + exp(1 + data[idx + i * batch_size] * error_val)));
       }
 
       //Only one thread needs to subtract
       if(idx == 0){
         for(int i = 0; i < 50; i++){
-          weights[i] = weight_v[i] - step_size * grad[i];
+          weights[i] = weight_v[i] - step_size * gradient[i];
         }
       }
       idx += gridDim.x * blockDim.x;
@@ -95,8 +85,8 @@ float cudaClassify(
     float *weights,
     cudaStream_t stream)
 {
-    int block_size = (batch_size < 1024) ? batch_size : 1024;
-    // int block_size = 512;
+    // int block_size = (batch_size < 1024) ? batch_size : 1024;
+    int block_size = 512;
 
     // grid_size = CEIL(batch_size / block_size)
     int grid_size = (batch_size + block_size - 1) / block_size;
