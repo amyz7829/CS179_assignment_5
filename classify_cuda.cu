@@ -114,13 +114,6 @@ float cudaClassify(
         weights,
         d_errors);
 
-    cudaError err = cudaGetLastError();
-    if  (cudaSuccess != err){
-            cerr << "Error for kernel" << cudaGetErrorString(err) << endl;
-    } else {
-            cerr << "No kernel error detected" << endl;
-    }
-
     float h_errors = -1.0;
     gpuErrChk(cudaMemcpy(&h_errors, d_errors, sizeof(float), cudaMemcpyDefault));
     gpuErrChk(cudaFree(d_errors));
