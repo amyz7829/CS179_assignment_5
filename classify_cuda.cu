@@ -59,7 +59,7 @@ void trainLogRegKernel(
 
       //Now atomically build gradient
       for(int i = 0; i < 50; i++){
-        atomicAdd(grad[i], &gradient[i]);
+        atomicAdd(&gradient[i], grad[i]);
       }
       //Only one thread needs to subtract
       if(tid == 0){
