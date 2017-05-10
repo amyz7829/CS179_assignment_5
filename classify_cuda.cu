@@ -49,11 +49,13 @@ void trainLogRegKernel(
 
       float* gradient = &shmem[sizeof(float) * 50];
 
-      float *x = (float *)malloc(51 * sizeof(float));
+      float *x;
+      cudaMalloc(&x, 51 * sizeof(float));
       for(int i = 0; i < 51; i++){
         x[i] = data[idx + i * batch_size];
       }
-      float *grad = (float *)malloc(50 * sizeof(float));
+      float *grad;
+      cudaMalloc(&grad, 50 * sizeof(float));
       //The error value is the dot product
       float error_val = 0;
       for(int i = 0; i < 50; i++){
