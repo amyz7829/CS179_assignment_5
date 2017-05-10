@@ -47,7 +47,7 @@ void trainLogRegKernel(
       float* weight_v = &shmem[0];
       weight_v = weights;
 
-      float* gradient = &shmem[sizeof(float) * 50];
+      float* gradient = &shmem[50];
 
       //The error value is the dot product
       float error_val = 0;
