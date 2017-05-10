@@ -8,7 +8,7 @@ CUDA_BIN_PATH   ?= $(CUDA_PATH)/bin
 CUDA_LIB_PATH   ?= $(CUDA_PATH)/lib
 
 # CUDA code generation flags
-GENCODE_FLAGS   := -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35
+GENCODE_FLAGS   := -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 --ptxas-options="-v"
 
 # Common binaries
 NVCC            ?= $(CUDA_BIN_PATH)/nvcc
@@ -48,7 +48,7 @@ classify.o: classify_cuda.cu
 ta_utilities.o: ta_utilities.cpp
 	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
 
-	
+
 clean:
 	rm -f *.o $(TARGETS)
 

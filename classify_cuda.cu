@@ -94,7 +94,7 @@ float cudaClassify(
     int grid_size = (batch_size + block_size - 1) / block_size;
 
     // 50 floats for the weight, 50 floats for the gradient
-    int shmem_bytes = 0;
+    int shmem_bytes = sizeof(float) * 100;
 
     float *d_errors;
     gpuErrChk(cudaMalloc(&d_errors, sizeof(float)));
