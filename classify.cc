@@ -86,12 +86,12 @@ void classify(istream& in_stream, int batch_size) {
     gaussianFill(weight, 50);
 
     float *dev_weight;
-    gpuErrChk(cudaMalloc(&dev_weight, weight, 50 * sizeof(float)));
+    gpuErrChk(cudaMalloc(&dev_weight, 50 * sizeof(float)));
 
     // Adjust offset to make it like "two" buffers
     float *buffer = (float *) malloc(batch_size * 51 * 2 * sizeof(float));
     float *dev_buffer;
-    gpuErrChk(cudaMalloc(&dev_buffer, buffer, batch_size * 51 * sizeof(float)));
+    gpuErrChk(cudaMalloc(&dev_buffer, batch_size * 51 * sizeof(float)));
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
