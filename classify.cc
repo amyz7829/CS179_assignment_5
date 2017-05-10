@@ -95,27 +95,31 @@ void classify(istream& in_stream, int batch_size) {
     float *dev_buffer;
     gpuErrChk(cudaMalloc(&dev_buffer, batch_size * 51 * sizeof(float)));
 
-    cudaStream_t stream;
-    cudaStreamCreate(&stream);
+    cudaStream_t stream[2];
+    cudaStreamCreate(&stream[0]);
+    cudaStreamCreate(&stream[1]);
 
     // main loop to process input lines (each line corresponds to a review)
     int review_idx = 0;
     bool offset = false;
     int offset_size = 0;
+    int stream_n = 0;
     for (string review_str; getline(in_stream, review_str); review_idx++) {
         // TODO: process review_str with readLSAReview
         if(offset){
           offset_size = batch_size;
+          stream_n = 1;
         }
         else{
           offset_size = 0;
+          stream_n = 0;
         }
         readLSAReview(review_str, &buffer[review_idx % batch_size + offset_size], batch_size);
         // TODO: if you have filled up a batch, copy H->D, call kernel and copy
         //      D->H all in a stream
         if(review_idx != 0 && review_idx % batch_size == 0){
-          cudaMemcpyAsync(dev_buffer, (void*)(buffer + sizeof(float) * offset_size * 51), batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream);
-          cout << "Errors: " << cudaClassify(dev_buffer, batch_size, .1, weight, stream) << endl;
+          cudaMemcpyAsync(dev_buffer, (void*)(buffer + sizeof(float) * offset_size * 51), batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream[stream_n]);
+          cout << "Errors: " << cudaClassify(dev_buffer, batch_size, .1, weight, stream[stream_n]) << endl;
           //flip offset
           offset = !offset;
         }

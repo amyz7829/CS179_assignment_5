@@ -58,8 +58,9 @@ void trainLogRegKernel(
       for(int i = 0; i < 50; i++){
         atomicAdd(&gradient[i], grad[i]);
       }
+
       //Only one thread needs to subtract
-      if(tid == 0){
+      if(idx == 0){
         for(int i = 0; i < 50; i++){
           weights[i] = weight_v[i] - step_size * grad[i];
         }
@@ -84,7 +85,7 @@ float cudaClassify(
 
     // grid_size = CEIL(batch_size / block_size)
     int grid_size = (batch_size + block_size - 1) / block_size;
-    int shmem_bytes = 0;
+    int shmem_bytes = sizeof(float) * 100;
 
     float *d_errors;
     cudaMalloc(&d_errors, sizeof(float));
