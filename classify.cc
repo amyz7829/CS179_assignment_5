@@ -127,7 +127,7 @@ void classify(istream& in_stream, int batch_size) {
         // }
     }
 
-    cudaMemcpy(weight, dev_weight, 50 * sizeof(float), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(weight, dev_weight, 50 * sizeof(float), cudaMemcpyDeviceToHost);
 
     // TODO: print out weights
     for(int i = 0; i < 50; i++){
@@ -137,14 +137,14 @@ void classify(istream& in_stream, int batch_size) {
     free(weight);
     free(buffer);
 
-    cudaFree(dev_weight);
-    cudaFree(dev_buffer);
-
-    cudaStreamSynchronize(stream[0]);
-    cudaStreamDestroy(stream[0]);
-
-    cudaStreamSynchronize(stream[1]);
-    cudaStreamDestroy(stream[1]);
+    // cudaFree(dev_weight);
+    // cudaFree(dev_buffer);
+    //
+    // cudaStreamSynchronize(stream[0]);
+    // cudaStreamDestroy(stream[0]);
+    //
+    // cudaStreamSynchronize(stream[1]);
+    // cudaStreamDestroy(stream[1]);
 }
 
 int main(int argc, char** argv) {
