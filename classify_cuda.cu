@@ -17,6 +17,14 @@
  *         value of loss function over the batch or the misclassification rate
  *         in the batch to errors.
  */
+ float dotProduct(float *v1, float *v2, int size){
+   float result = 0;
+   for(int i = 0; i < size; i++){
+     result += v1[i] * v2[i];
+   }
+   return result;
+ }
+
 __global__
 void trainLogRegKernel(
     float *data,
@@ -31,14 +39,15 @@ void trainLogRegKernel(
     while(idx < batch_size){
       extern __shared__ float shmem[];
       float* weight_v = &shmem[0];
-      float* gradient = &shmem[sizeof(float) * 50)];
+      weight_v = weights;
+      float* gradient = &shmem[sizeof(float) * 50];
 
       float *x = (float *)malloc(51 * sizeof(float));
       for(int i = 0; i < 51; i++){
-        x[i] = data[idx + i * batch_size]
+        x[i] = data[idx + i * batch_size];
       }
       float *grad = (float *)malloc(50 * sizeof(float));
-      float error_val = dotProduct(weights, x);
+      float error_val = dotProduct(weight_v, x);
       // If there is an error, add to the error
       if(error_val <= 0){
         *errors += 1 / batch_size;
@@ -50,24 +59,16 @@ void trainLogRegKernel(
 
       //Now atomically build gradient
       for(int i = 0; i < 50; i++){
-        atomicAdd(grad[i], gradient[i]);
+        atomicAdd(grad[i], &gradient[i]);
       }
       //Only one thread needs to subtract
       if(tid == 0){
         for(int i = 0; i < 50; i++){
-          weights[i] = weights[i] - step_size * grad[i];
+          weights[i] = weight_v[i] - step_size * grad[i];
         }
       }
       idx += gridDim.x * blockDim.x;
     }
-}
-
-float dotProduct(float *v1, float *v2, int size){
-  float result = 0;
-  for(int i = 0; i < size; i++){
-    result += v1[i] * v2[i];
-  }
-  return result;
 }
 
 /*
