@@ -17,13 +17,6 @@
  *         value of loss function over the batch or the misclassification rate
  *         in the batch to errors.
  */
- float dotProduct(float *v1, float *v2, int size){
-   float result = 0;
-   for(int i = 0; i < size; i++){
-     result += v1[i] * v2[i];
-   }
-   return result;
- }
 
 __global__
 void trainLogRegKernel(
@@ -47,7 +40,11 @@ void trainLogRegKernel(
         x[i] = data[idx + i * batch_size];
       }
       float *grad = (float *)malloc(50 * sizeof(float));
-      float error_val = dotProduct(weight_v, x, 50);
+      //The error value is the dot product
+      float error_val = 0;
+      for(int i = 0; i < size; i++){
+        error_val += weight_v[i] * x[i];
+      }
       // If there is an error, add to the error
       if(error_val <= 0){
         *errors += 1 / batch_size;
