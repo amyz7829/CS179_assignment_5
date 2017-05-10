@@ -119,7 +119,7 @@ void classify(istream& in_stream, int batch_size) {
         // TODO: if you have filled up a batch, copy H->D, call kernel and copy
         //      D->H all in a stream
         if(review_idx != 0 && review_idx % batch_size == 0){
-          cudaMemcpyAsync(dev_buffer, (void*)(buffer + sizeof(float) * offset_size * 51), batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream[stream_n]);
+          cudaMemcpyAsync(dev_buffer, (void*)(buffer + offset_size * 51), batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream[stream_n]);
           cout << "Errors: " << cudaClassify(dev_buffer, batch_size, .1, weight, stream[stream_n]) << endl;
           //flip offset
           offset = !offset;
