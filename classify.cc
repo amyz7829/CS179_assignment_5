@@ -87,44 +87,44 @@ void classify(istream& in_stream, int batch_size) {
     for(int i = 0; i < 50; i++){
       cout<<"Original weight: "<<weight[i]<<endl;
     }
-    float *dev_weight;
-    gpuErrChk(cudaMalloc(&dev_weight, 50 * sizeof(float)));
+    // float *dev_weight;
+    // gpuErrChk(cudaMalloc(&dev_weight, 50 * sizeof(float)));
 
     // Adjust offset to make it like "two" buffers
     float *buffer = (float *) malloc(batch_size * 51 * 2 * sizeof(float));
-    float *dev_buffer;
-    gpuErrChk(cudaMalloc(&dev_buffer, batch_size * 51 * sizeof(float)));
-
-    cudaStream_t stream[2];
-    cudaStreamCreate(&stream[0]);
-    cudaStreamCreate(&stream[1]);
+    // float *dev_buffer;
+    // gpuErrChk(cudaMalloc(&dev_buffer, batch_size * 51 * sizeof(float)));
+    //
+    // cudaStream_t stream[2];
+    // cudaStreamCreate(&stream[0]);
+    // cudaStreamCreate(&stream[1]);
 
     // main loop to process input lines (each line corresponds to a review)
     int review_idx = 0;
-    bool offset = false;
-    int offset_size = 0;
-    int stream_n = 0;
+    // bool offset = false;
+    // int offset_size = 0;
+    // int stream_n = 0;
     cout<<"about to start for loop"<<endl;
     for (string review_str; getline(in_stream, review_str); review_idx++) {
         // TODO: process review_str with readLSAReview
         cout<<"review idx: "<<review_idx<<endl;
-        if(offset){
-          offset_size = batch_size;
-          stream_n = 1;
-        }
-        else{
-          offset_size = 0;
-          stream_n = 0;
-        }
+        // if(offset){
+        //   offset_size = batch_size;
+        //   stream_n = 1;
+        // }
+        // else{
+        //   offset_size = 0;
+        //   stream_n = 0;
+        // }
         readLSAReview(review_str, &buffer[review_idx % batch_size + offset_size], batch_size);
         // TODO: if you have filled up a batch, copy H->D, call kernel and copy
         //      D->H all in a stream
-        if(review_idx != 0 && review_idx % batch_size == 0){
-          cudaMemcpyAsync(dev_buffer, (void*)(buffer + sizeof(float) * offset_size * 51), batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream[stream_n]);
-          cout << "Errors: " << cudaClassify(dev_buffer, batch_size, .1, weight, stream[stream_n]) << endl;
-          //flip offset
-          offset = !offset;
-        }
+        // if(review_idx != 0 && review_idx % batch_size == 0){
+        //   cudaMemcpyAsync(dev_buffer, (void*)(buffer + sizeof(float) * offset_size * 51), batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream[stream_n]);
+        //   cout << "Errors: " << cudaClassify(dev_buffer, batch_size, .1, weight, stream[stream_n]) << endl;
+        //   //flip offset
+        //   offset = !offset;
+        // }
     }
 
     cudaMemcpy(weight, dev_weight, 50 * sizeof(float), cudaMemcpyDeviceToHost);
