@@ -4,19 +4,6 @@
 #include <cuda_runtime.h>
 #include "classify_cuda.cuh"
 
-/*
- * Arguments:
- * data: Memory that contains both the review LSA coefficients and the labels.
- *       Format decided by implementation of classify.
- * batch_size: Size of mini-batch, how many elements to process at once
- * step_size: Step size for gradient descent. Tune this as needed. 1.0 is sane
- *            default.
- * weights: Pointer to weights vector of length REVIEW_DIM.
- * errors: Pointer to a single float used to describe the error for the batch.
- *         An output variable for the kernel. The kernel can either write the
- *         value of loss function over the batch or the misclassification rate
- *         in the batch to errors.
- */
  #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
  inline void gpuAssert(
      cudaError_t code,
@@ -31,6 +18,19 @@
      }
  }
 
+ /*
+  * Arguments:
+  * data: Memory that contains both the review LSA coefficients and the labels.
+  *       Format decided by implementation of classify.
+  * batch_size: Size of mini-batch, how many elements to process at once
+  * step_size: Step size for gradient descent. Tune this as needed. 1.0 is sane
+  *            default.
+  * weights: Pointer to weights vector of length REVIEW_DIM.
+  * errors: Pointer to a single float used to describe the error for the batch.
+  *         An output variable for the kernel. The kernel can either write the
+  *         value of loss function over the batch or the misclassification rate
+  *         in the batch to errors.
+  */
 __global__
 void trainLogRegKernel(
     float *data,
@@ -39,7 +39,6 @@ void trainLogRegKernel(
 	float *weights,
     float *errors)
 {
-    // TODO: write me
     int tid = threadIdx.x;
     uint idx = blockIdx.x * blockDim.x + tid;
     while(idx < batch_size){
@@ -49,20 +48,26 @@ void trainLogRegKernel(
 
       float* gradient = &shmem[50];
 
-      //The error value is the dot product
+      // The error value is the dot product of weight[i] and x[i]
       float error_val = 0;
       for(int i = 0; i < 50; i++){
         assert(idx + i * batch_size < batch_size * 51);
         error_val += weight_v[i] * data[idx + i * batch_size];
       }
-      // If there is an error, add to the error
-      if(error_val <= 0){
+
+      // If there is an error, add to the error atomically. Each variable in the
+      // batch can generate 1 error if its sign does not match its correct value,
+      // so it contributes 1 / batch_size to the error rate
+      if(error_val * data[idx + 50 * batch_size] <= 0){
         atomicAdd(errors, 1 / batch_size);
       }
-      //Find the gradient for the data point x
+
+      // Find the gradient for the data point x using the formula:
+      // (1 / batch_size) * (y * x[i] / 1 + e^(1 + x[i] * (weight[i] dot x[i])))
       for(int i = 0; i < 50; i++){
+        // Make sure that the index used for x is inbounds
         assert(idx + i * batch_size < batch_size * 51);
-        atomicAdd(&gradient[i], (1 / batch_size) * (data[idx + 51 * batch_size] * data[idx + i * batch_size]) / (1 + exp(1 + data[idx + i * batch_size] * error_val)));
+        atomicAdd(&gradient[i], (1 / batch_size) * (data[idx + 50 * batch_size] * data[idx + i * batch_size]) / (1 + exp(1 + data[idx + i * batch_size] * error_val)));
       }
 
       //Only one thread needs to subtract
