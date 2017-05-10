@@ -84,7 +84,9 @@ void classify(istream& in_stream, int batch_size) {
     //       host & device. allocate and initialize streams
     float *weight = (float *) malloc(50 * sizeof(float));
     gaussianFill(weight, 50);
-
+    for(int i = 0; i < 50; i++){
+      cout<<"Original weight: "<<weight[i]<<endl;
+    }
     float *dev_weight;
     gpuErrChk(cudaMalloc(&dev_weight, 50 * sizeof(float)));
 
