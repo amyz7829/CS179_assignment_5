@@ -89,7 +89,7 @@ void classify(istream& in_stream, int batch_size) {
     gpuErrChk(cudaMalloc(&dev_weight, 50 * sizeof(float)));
 
     // Adjust offset to make it like "two" buffers
-    float buffer[batch_size * 2];
+    float *buffer = (float *) malloc(batch_size * 51 * 2 * sizeof(float));
     float *dev_buffer;
     gpuErrChk(cudaMalloc(&dev_buffer, batch_size * 51 * sizeof(float)));
 
@@ -112,7 +112,7 @@ void classify(istream& in_stream, int batch_size) {
         // TODO: if you have filled up a batch, copy H->D, call kernel and copy
         //      D->H all in a stream
         if(review_idx != 0 && review_idx % batch_size == 0){
-          cudaMemcpyAsync(dev_buffer, buffer[offset_size * 51], batch_size * 50 * sizeof(float), cudaMemcpyHostToDevice, stream);
+          cudaMemcpyAsync(dev_buffer, buffer + sizeof(float) * offset_size * 51, batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream);
           cout << cudaClassify(dev_buffer, batch_size, .1, weight, stream) << endl;
           //flip offset
           offset = !offset;
