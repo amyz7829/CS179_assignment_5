@@ -99,7 +99,7 @@ void classify(istream& in_stream, int batch_size) {
     // main loop to process input lines (each line corresponds to a review)
     int review_idx = 0;
     bool offset = false;
-    float offset_size = 0;
+    int offset_size = 0;
     for (string review_str; getline(in_stream, review_str); review_idx++) {
         // TODO: process review_str with readLSAReview
         if(offset){
