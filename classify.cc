@@ -107,6 +107,7 @@ void classify(istream& in_stream, int batch_size) {
     int stream_n = 0;
     for (string review_str; getline(in_stream, review_str); review_idx++) {
         // TODO: process review_str with readLSAReview
+        //Check the offset, and adjust values based on this
         if(offset){
           offset_size = batch_size;
           stream_n = 1;
@@ -115,19 +116,32 @@ void classify(istream& in_stream, int batch_size) {
           offset_size = 0;
           stream_n = 0;
         }
+        //Read in a review and store it appropriately in the buffer
         readLSAReview(review_str, &buffer[review_idx % batch_size + offset_size], batch_size);
         // TODO: if you have filled up a batch, copy H->D, call kernel and copy
         //      D->H all in a stream
         if(review_idx != 0 && review_idx % batch_size == 0){
+          //Before we start using stream[n] again, ensure that it finishes its previous duties using
+          //cudaStreamSynchronize
+          if(offset){
+            cudaStreamSynchronize(stream[1]);
+          }
+          else{
+            cudaStreamSynchronize(stream[0]);
+          }
+          //Copy the buffer over the GPU (based on whether or not the offset is currently being used) using stream[n], also based on the offset
           cudaMemcpyAsync(dev_buffer, (void*)(buffer + offset_size * 51), batch_size * 51 * sizeof(float), cudaMemcpyHostToDevice, stream[stream_n]);
+          //Print out the errors
           cout << "Errors: " << cudaClassify(dev_buffer, batch_size, .1, weight, stream[stream_n]) << endl;
+
+          //Check that the kernel has run correctly
           cudaError err = cudaGetLastError();
           if  (cudaSuccess != err){
                   cerr << "Error for kernel" << cudaGetErrorString(err) << endl;
           } else {
                   cerr << "No kernel error detected" << endl;
           }
-          //flip offset
+          //flip offset so that the other half of the buffer will be used, ensuring that the memcpy will read the previous values
           offset = !offset;
         }
     }
