@@ -137,7 +137,12 @@ void classify(istream& in_stream, int batch_size) {
 
     cudaFree(dev_weight);
     cudaFree(dev_buffer);
-    cudaStreamDestroy(stream);
+
+    cudaStreamSynchronize(stream[0]);
+    cudaStreamDestroy(stream[0]);
+
+    cudaStreamSynchronize(stream[1]);
+    cudaStreamDestroy(stream[1]);
 }
 
 int main(int argc, char** argv) {
