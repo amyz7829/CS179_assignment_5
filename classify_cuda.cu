@@ -47,7 +47,7 @@ void trainLogRegKernel(
         x[i] = data[idx + i * batch_size];
       }
       float *grad = (float *)malloc(50 * sizeof(float));
-      float error_val = dotProduct(weight_v, x);
+      float error_val = dotProduct(weight_v, x, 50);
       // If there is an error, add to the error
       if(error_val <= 0){
         *errors += 1 / batch_size;
