@@ -57,7 +57,7 @@ void trainLogRegKernel(
       //The error value is the dot product
       float error_val = 0;
       for(int i = 0; i < 50; i++){
-        error_val += weight_v[i] * x[i];
+        error_val += weight_v[i] * data[i];
       }
       // If there is an error, add to the error
       if(error_val <= 0){
@@ -113,6 +113,13 @@ float cudaClassify(
         step_size,
         weights,
         d_errors);
+
+    cudaError err = cudaGetLastError();
+    if  (cudaSuccess != err){
+            cerr << "Error for kernel" << cudaGetErrorString(err) << endl;
+    } else {
+            cerr << "No kernel error detected" << endl;
+    }
 
     float h_errors = -1.0;
     gpuErrChk(cudaMemcpy(&h_errors, d_errors, sizeof(float), cudaMemcpyDefault));
