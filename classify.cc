@@ -104,6 +104,7 @@ void classify(istream& in_stream, int batch_size) {
     bool offset = false;
     int offset_size = 0;
     int stream_n = 0;
+    cout<<"about to start for loop"<<endl;
     for (string review_str; getline(in_stream, review_str); review_idx++) {
         // TODO: process review_str with readLSAReview
         cout<<"review idx: "<<review_idx<<endl;
