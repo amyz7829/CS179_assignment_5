@@ -44,8 +44,7 @@ void trainLogRegKernel(
     while(idx < batch_size){
       // The shared memory is the size of the weight vector (50 floats) and the
       // gradient (50 floats)
-      extern __shared__ float shmem[];
-      float* gradient = &shmem[50];
+      extern __shared__ float gradient[];
 
       // The error value is the dot product of weight[i] and x[i]
       float error_val = 0;
@@ -98,7 +97,7 @@ float cudaClassify(
     int grid_size = (batch_size + block_size - 1) / block_size;
 
     // 50 floats for the weight, 50 floats for the gradient
-    int shmem_bytes = sizeof(float) * 100;
+    int shmem_bytes = sizeof(float) * 50;
 
     float *d_errors;
     gpuErrChk(cudaMalloc(&d_errors, sizeof(float)));
