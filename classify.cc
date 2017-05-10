@@ -116,7 +116,7 @@ void classify(istream& in_stream, int batch_size) {
         //   offset_size = 0;
         //   stream_n = 0;
         // }
-        readLSAReview(review_str, &buffer[review_idx % batch_size + offset_size], batch_size);
+        readLSAReview(review_str, &buffer[review_idx % (batch_size * 2)], batch_size);
         // TODO: if you have filled up a batch, copy H->D, call kernel and copy
         //      D->H all in a stream
         // if(review_idx != 0 && review_idx % batch_size == 0){
