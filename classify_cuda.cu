@@ -36,23 +36,22 @@ void trainLogRegKernel(
     float *data,
     int batch_size,
     int step_size,
-	float *weights,
+	  float *weights,
     float *errors)
 {
     int tid = threadIdx.x;
     uint idx = blockIdx.x * blockDim.x + tid;
     while(idx < batch_size){
+      // The shared memory is the size of the weight vector (50 floats) and the
+      // gradient (50 floats)
       extern __shared__ float shmem[];
-      float* weight_v = &shmem[0];
-      weight_v = weights;
-
       float* gradient = &shmem[50];
 
       // The error value is the dot product of weight[i] and x[i]
       float error_val = 0;
       for(int i = 0; i < 50; i++){
         assert(idx + i * batch_size < batch_size * 51);
-        error_val += weight_v[i] * data[idx + i * batch_size];
+        error_val += weights[i] * data[idx + i * batch_size];
       }
 
       // If there is an error, add to the error atomically. Each variable in the
@@ -73,7 +72,7 @@ void trainLogRegKernel(
       //Only one thread needs to subtract
       if(idx == 0){
         for(int i = 0; i < 50; i++){
-          weights[i] = weight_v[i] - step_size * gradient[i];
+          weights[i] -= step_size * gradient[i];
         }
       }
       idx += gridDim.x * blockDim.x;
@@ -105,12 +104,12 @@ float cudaClassify(
     gpuErrChk(cudaMalloc(&d_errors, sizeof(float)));
     gpuErrChk(cudaMemset(d_errors, 0, sizeof(float)));
 
-    // trainLogRegKernel<<<grid_size, block_size, shmem_bytes, stream>>>(
-    //     data,
-    //     batch_size,
-    //     step_size,
-    //     weights,
-    //     d_errors);
+    trainLogRegKernel<<<grid_size, block_size, shmem_bytes, stream>>>(
+        data,
+        batch_size,
+        step_size,
+        weights,
+        d_errors);
 
     float h_errors = -1.0;
     gpuErrChk(cudaMemcpy(&h_errors, d_errors, sizeof(float), cudaMemcpyDefault));
