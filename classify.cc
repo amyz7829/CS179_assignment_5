@@ -114,6 +114,7 @@ void classify(istream& in_stream, int batch_size) {
         if(review_idx != 0 && review_idx % batch_size == 0){
           cudaMemcpyAsync(dev_buffer, buffer + (offset_size * 51 * sizeof(float)), batch_size * 50 * sizeof(float), cudaMemcpyHostToDevice, stream);
           cout << cudaClassify(dev_buffer, batch_size, .1, weight, stream) << endl;
+          //flip offset
           offset = !offset;
         }
     }
